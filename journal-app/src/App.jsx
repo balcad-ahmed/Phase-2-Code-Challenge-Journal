@@ -6,11 +6,86 @@ import './App.css'
 
 const API_URL = 'https://jsonplaceholder.typicode.com/posts'
 
+// Pre-populated realistic journal entries
+const PRE_POPULATED_ENTRIES = [
+  {
+    id: 1,
+    title: "New Beginnings",
+    body: "Woke up feeling refreshed today. The rain last night washed everything clean, and the air smells fresh. Been thinking about starting a morning routine - maybe some meditation and journaling. Need to find a better work-life balance. The constant notifications and emails are draining my energy. Starting with 10 minutes of quiet time before checking my phone.\n\nFeeling hopeful about the changes I want to make. Small steps forward are still progress.",
+    important: true,
+    userId: 1
+  },
+  {
+    id: 2,
+    title: "Overwhelmed at Work",
+    body: "Another day of back-to-back meetings. The project deadline is looming and I feel like I'm falling behind. Had a difficult conversation with my manager about resource constraints. Need to prioritize better and learn to say no to additional tasks.\n\nTaking a walk during lunch helped clear my head. Remember: progress over perfection. One task at a time.",
+    important: false,
+    userId: 1
+  },
+  {
+    id: 3,
+    title: "Learning to Cook",
+    body: "Tried making pad thai from scratch tonight. It was... interesting. The noodles stuck together and I definitely used too much fish sauce. But it was edible! Cooking is harder than it looks on those cooking shows.\n\nThere's something satisfying about creating a meal, even if it's not perfect. Will try again next week with less fish sauce.",
+    important: false,
+    userId: 1
+  },
+  {
+    id: 4,
+    title: "Coffee with Sarah",
+    body: "Met Sarah for coffee after months of trying to coordinate schedules. It's amazing how we can pick up right where we left off. She's thinking about changing careers and we talked about taking risks and following passions.\n\nGood friends are like anchors in this chaotic world. Need to make more time for these connections.",
+    important: true,
+    userId: 1
+  },
+  {
+    id: 5,
+    title: "Hiking at Blue Ridge",
+    body: "Hiked the Blue Ridge trail today. The view from the summit was breathtaking - layers of mountains fading into the horizon. Met an older couple who've been hiking there for 30 years. They said the trail changes every season but the peace remains the same.\n\nNature has a way of putting things in perspective. All my worries seemed smaller from up there.",
+    important: true,
+    userId: 1
+  },
+  {
+    id: 6,
+    title: "Project Didn't Go as Planned",
+    body: "The client wasn't happy with our proposal. All that work and they want us to start over. Feeling frustrated but trying to see it as a learning opportunity. Maybe we weren't listening closely enough to what they really needed.\n\nFailure isn't the opposite of success - it's part of it. Back to the drawing board tomorrow.",
+    important: false,
+    userId: 1
+  },
+  {
+    id: 7,
+    title: "Finally Organized My Desk",
+    body: "Cleared out the mountain of papers that had been accumulating for months. Found three pens that actually work and that important document I thought I'd lost. Such a small thing, but it feels like a weight has been lifted.\n\nSometimes the smallest tasks make the biggest difference in how I feel about my space and myself.",
+    important: false,
+    userId: 1
+  },
+  {
+    id: 8,
+    title: "Writing Struggle",
+    body: "Stared at a blank page for two hours today. The words just wouldn't come. Tried changing locations, making tea, even cleaning (desperate times). Nothing worked.\n\nMaybe some days are just for collecting experiences rather than creating from them. Tomorrow is another day.",
+    important: false,
+    userId: 1
+  },
+  {
+    id: 9,
+    title: "Rainy Sunday",
+    body: "Spent the day reading with the sound of rain against the window. Made soup from scratch and actually followed a recipe for once. The house smelled amazing all afternoon.\n\nThese quiet, simple days are just as important as the exciting ones. Learning to appreciate the stillness.",
+    important: true,
+    userId: 1
+  },
+  {
+    id: 10,
+    title: "Three Good Things",
+    body: "Today I'm grateful for:\n1. The way the sunlight came through the window this morning\n2. That random text from an old friend checking in\n3. Finding my favorite tea at the store\n\nIt's easy to focus on what's going wrong, but there's always something to appreciate if I look for it.",
+    important: false,
+    userId: 1
+  }
+]
+
 function App() {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [filterImportant, setFilterImportant] = useState(false)
+  const [useMockData, setUseMockData] = useState(false)
 
   // Fetch entries on component mount
   useEffect(() => {
@@ -22,14 +97,26 @@ function App() {
     try {
       const response = await fetch(API_URL)
       const data = await response.json()
-      // Add important property to each entry
-      const entriesWithImportant = data.slice(0, 10).map(entry => ({
-        ...entry,
-        important: false
-      }))
-      setEntries(entriesWithImportant)
+      
+      // Check if we got real data from API
+      if (data && data.length > 0 && data[0].id) {
+        // Use real API data but limit to 10 entries and add important property
+        const entriesWithImportant = data.slice(0, 10).map(entry => ({
+          ...entry,
+          important: Math.random() > 0.7 // Randomly mark some as important
+        }))
+        setEntries(entriesWithImportant)
+        setUseMockData(false)
+      } else {
+        // If API fails or returns empty, use mock data
+        setEntries(PRE_POPULATED_ENTRIES)
+        setUseMockData(true)
+      }
     } catch (error) {
-      console.error('Error fetching entries:', error)
+      console.error('Error fetching entries, using mock data:', error)
+      // Use pre-populated entries if API call fails
+      setEntries(PRE_POPULATED_ENTRIES)
+      setUseMockData(true)
     } finally {
       setLoading(false)
     }
@@ -38,28 +125,34 @@ function App() {
   const createEntry = async (entryData) => {
     setLoading(true)
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: entryData.title,
-          body: entryData.body,
-          userId: 1,
-        }),
-      })
-      const newEntry = await response.json()
-      
-      // Add to local state with important property
-      const entryWithImportant = {
-        ...newEntry,
-        id: Date.now(), // Temporary ID since API returns same ID
-        important: false
+      // For demo purposes, we'll simulate API call but use local state
+      const newEntry = {
+        id: Date.now(), // Use timestamp as ID
+        title: entryData.title,
+        body: entryData.body,
+        important: false,
+        userId: 1
       }
       
-      setEntries(prev => [entryWithImportant, ...prev])
+      setEntries(prev => [newEntry, ...prev])
       setShowForm(false)
+      
+      // Optional: Also try to post to API (might fail in demo)
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: entryData.title,
+            body: entryData.body,
+            userId: 1,
+          }),
+        })
+      } catch (apiError) {
+        console.log('API post failed, but entry saved locally')
+      }
     } catch (error) {
       console.error('Error creating entry:', error)
     } finally {
@@ -69,21 +162,28 @@ function App() {
 
   const deleteEntry = async (id) => {
     try {
+      // Try to delete from API
       await fetch(`${API_URL}/${id}`, {
         method: 'DELETE',
       })
-      // Update UI even if API call fails (since JSONPlaceholder doesn't persist)
-      setEntries(prev => prev.filter(entry => entry.id !== id))
     } catch (error) {
-      console.error('Error deleting entry:', error)
-      // Still update UI for better UX
-      setEntries(prev => prev.filter(entry => entry.id !== id))
+      console.log('API delete failed, but removing locally')
     }
+    // Always update UI
+    setEntries(prev => prev.filter(entry => entry.id !== id))
   }
 
   const updateEntry = async (id, entryData) => {
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      // Update locally first for better UX
+      setEntries(prev => prev.map(entry => 
+        entry.id === id 
+          ? { ...entry, title: entryData.title, body: entryData.body }
+          : entry
+      ))
+      
+      // Try to update via API
+      await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -95,13 +195,6 @@ function App() {
           userId: 1,
         }),
       })
-      const updatedEntry = await response.json()
-      
-      setEntries(prev => prev.map(entry => 
-        entry.id === id 
-          ? { ...updatedEntry, important: entry.important }
-          : entry
-      ))
     } catch (error) {
       console.error('Error updating entry:', error)
     }
@@ -122,6 +215,11 @@ function App() {
       <header className="app-header">
         <h1>📖 My Journal</h1>
         <p>Capture your thoughts and reflections</p>
+        {useMockData && (
+          <div className="demo-notice">
+            <small>Using demo data - API might be unavailable</small>
+          </div>
+        )}
       </header>
 
       <div className="app-controls">
@@ -137,6 +235,14 @@ function App() {
           onClick={() => setFilterImportant(!filterImportant)}
         >
           {filterImportant ? 'Show All' : 'Important Only'}
+        </button>
+
+        <button 
+          className="btn btn-secondary"
+          onClick={fetchEntries}
+          disabled={loading}
+        >
+          {loading ? 'Loading...' : 'Refresh Data'}
         </button>
       </div>
 

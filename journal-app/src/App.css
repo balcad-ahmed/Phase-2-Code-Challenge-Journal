@@ -290,3 +290,35 @@ body {
     align-self: flex-end;
   }
 }
+
+
+/* Add this to your existing App.css */
+.demo-notice {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+  padding: 8px 12px;
+  border-radius: 5px;
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+
+.app-controls {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Make sure buttons wrap nicely on mobile */
+@media (max-width: 768px) {
+  .app-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .app-controls .btn {
+    width: 200px;
+  }
+}
