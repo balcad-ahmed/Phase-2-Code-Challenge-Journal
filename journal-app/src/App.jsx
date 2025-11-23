@@ -82,14 +82,20 @@ const PRE_POPULATED_ENTRIES = [
 
 function App() {
   const [entries, setEntries] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true) // Start with loading true
   const [showForm, setShowForm] = useState(false)
   const [filterImportant, setFilterImportant] = useState(false)
-  const [useMockData, setUseMockData] = useState(false)
+  const [dataSource, setDataSource] = useState('demo') // 'demo' or 'api'
 
-  // Fetch entries on component mount
+  // Use pre-populated entries immediately on component mount
   useEffect(() => {
-    fetchEntries()
+    const timer = setTimeout(() => {
+      setEntries(PRE_POPULATED_ENTRIES)
+      setLoading(false)
+      setDataSource('demo')
+    }, 1000) // Small delay to show loading state
+    
+    return () => clearTimeout(timer)
   }, [])
 
   const fetchEntries = async () => {
@@ -98,34 +104,38 @@ function App() {
       const response = await fetch(API_URL)
       const data = await response.json()
       
-      // Check if we got real data from API
-      if (data && data.length > 0 && data[0].id) {
-        // Use real API data but limit to 10 entries and add important property
-        const entriesWithImportant = data.slice(0, 10).map(entry => ({
-          ...entry,
-          important: Math.random() > 0.7 // Randomly mark some as important
-        }))
-        setEntries(entriesWithImportant)
-        setUseMockData(false)
-      } else {
-        // If API fails or returns empty, use mock data
-        setEntries(PRE_POPULATED_ENTRIES)
-        setUseMockData(true)
-      }
+      // Use API data but transform it to match our structure
+      const apiEntries = data.slice(0, 10).map(entry => ({
+        ...entry,
+        important: Math.random() > 0.7 // Randomly mark some as important
+      }))
+      
+      setEntries(apiEntries)
+      setDataSource('api')
     } catch (error) {
-      console.error('Error fetching entries, using mock data:', error)
-      // Use pre-populated entries if API call fails
+      console.error('Error fetching entries:', error)
+      // Fall back to demo data if API fails
       setEntries(PRE_POPULATED_ENTRIES)
-      setUseMockData(true)
+      setDataSource('demo')
     } finally {
       setLoading(false)
     }
   }
 
+  const useDemoData = () => {
+    setLoading(true)
+    const timer = setTimeout(() => {
+      setEntries(PRE_POPULATED_ENTRIES)
+      setDataSource('demo')
+      setLoading(false)
+    }, 500)
+    
+    return () => clearTimeout(timer)
+  }
+
   const createEntry = async (entryData) => {
     setLoading(true)
     try {
-      // For demo purposes, we'll simulate API call but use local state
       const newEntry = {
         id: Date.now(), // Use timestamp as ID
         title: entryData.title,
@@ -137,7 +147,7 @@ function App() {
       setEntries(prev => [newEntry, ...prev])
       setShowForm(false)
       
-      // Optional: Also try to post to API (might fail in demo)
+      // Optional: Also try to post to API
       try {
         await fetch(API_URL, {
           method: 'POST',
@@ -215,11 +225,13 @@ function App() {
       <header className="app-header">
         <h1>📖 My Journal</h1>
         <p>Capture your thoughts and reflections</p>
-        {useMockData && (
-          <div className="demo-notice">
-            <small>Using demo data - API might be unavailable</small>
-          </div>
-        )}
+        <div className={`data-source ${dataSource === 'demo' ? 'demo-notice' : 'api-notice'}`}>
+          <small>
+            {dataSource === 'demo' 
+              ? 'Using realistic demo entries' 
+              : 'Using data from API'}
+          </small>
+        </div>
       </header>
 
       <div className="app-controls">
@@ -238,11 +250,21 @@ function App() {
         </button>
 
         <button 
-          className="btn btn-secondary"
+          className="btn btn-api"
           onClick={fetchEntries}
           disabled={loading}
+          title="Fetch from JSONPlaceholder API"
         >
-          {loading ? 'Loading...' : 'Refresh Data'}
+          {loading ? 'Loading...' : 'API Data'}
+        </button>
+
+        <button 
+          className="btn btn-demo"
+          onClick={useDemoData}
+          disabled={loading}
+          title="Use realistic demo entries"
+        >
+          Demo Data
         </button>
       </div>
 
